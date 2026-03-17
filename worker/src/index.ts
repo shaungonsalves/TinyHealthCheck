@@ -16,7 +16,6 @@ const redisPort = config.redis.port;
 let healthCheckQueue: Queue.Queue | null = null;
 let currentInterval: number = config.checkInterval;
 
-// Define the job processor separately with proper typing
 const processJob = async (job: Queue.Job) => {
     logger.info({ jobId: job.id }, "Running health checks");
     const redis = new Redis({ host: redisHost, port: redisPort });
@@ -61,25 +60,22 @@ async function getIntervalFromRedis(): Promise<number> {
 }
 
 async function setupScheduler(interval: number) {
-    if (healthCheckQueue) {
-        // Remove existing repeatable jobs
-        const repeatableJobs = await healthCheckQueue.getRepeatableJobs();
-        await Promise.all(repeatableJobs.map(job => healthCheckQueue!.removeRepeatableByKey(job.key)));
-    } else {
-        // Create queue and attach processor
-        healthCheckQueue = new Queue("health-checks", {
-            redis: { host: redisHost, port: redisPort }
-        });
-        healthCheckQueue.process("check-all", processJob);
-    }
+  if (healthCheckQueue) {
+    const repeatableJobs = await healthCheckQueue.getRepeatableJobs();
+    await Promise.all(repeatableJobs.map(job => healthCheckQueue!.removeRepeatableByKey(job.key)));
+  } else {
+    healthCheckQueue = new Queue("health-checks", {
+      redis: { host: redisHost, port: redisPort }
+    });
+    healthCheckQueue.process("check-all", processJob); // ✅ only here
+  }
 
-    // Add the new repeatable job
-    await healthCheckQueue.add(
-        "check-all",
-        {},
-        { repeat: { every: interval }, removeOnComplete: true, removeOnFail: false }
-    );
-    logger.info({ interval }, "Scheduled health checks");
+  await healthCheckQueue.add(
+    "check-all",
+    {},
+    { repeat: { every: interval }, removeOnComplete: true, removeOnFail: false }
+  );
+  logger.info({ interval }, "Scheduled health checks");
 }
 
 async function initialize() {

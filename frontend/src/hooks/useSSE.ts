@@ -5,7 +5,7 @@ import { logger } from '../logger';
 
 export const useSSE = () => {
   const { config } = useConfig();
-  const { setStatuses, showError } = useStatus();
+  const { setStatuses } = useStatus(); 
   const [isConnected, setIsConnected] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const reconnectAttempts = useRef(0);
@@ -13,7 +13,7 @@ export const useSSE = () => {
   const eventSourceRef = useRef<EventSource | null>(null);
 
   const connect = () => {
-    if (!config) return; // config not loaded yet
+    if (!config) return;
 
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
@@ -27,7 +27,6 @@ export const useSSE = () => {
       setIsConnected(true);
       setRetryCount(0);
       reconnectAttempts.current = 0;
-      showError(null);
     };
 
     es.onmessage = (event) => {
@@ -54,9 +53,6 @@ export const useSSE = () => {
 
       if (reconnectAttempts.current < config.maxReconnectAttempts) {
         const delay = config.baseReconnectDelay * Math.pow(2, reconnectAttempts.current);
-        showError(
-          `Connection lost. Reconnecting in ${delay / 1000}s... (attempt ${reconnectAttempts.current + 1}/${config.maxReconnectAttempts})`
-        );
         setRetryCount(reconnectAttempts.current + 1);
 
         if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
@@ -65,7 +61,6 @@ export const useSSE = () => {
           connect();
         }, delay) as unknown as number;
       } else {
-        showError('Unable to reconnect. Please refresh manually.');
         setRetryCount(config.maxReconnectAttempts);
       }
     };

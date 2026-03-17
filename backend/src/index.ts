@@ -25,8 +25,8 @@ app.decorate('pub', pub);
 const serverAdapter = new FastifyAdapter();
 const healthCheckQueue = new BullMQ('health-checks', { connection: config.redis });
 createBullBoard({
-  queues: [new BullMQAdapter(healthCheckQueue)],
-  serverAdapter,
+    queues: [new BullMQAdapter(healthCheckQueue)],
+    serverAdapter,
 });
 serverAdapter.setBasePath('/admin/queues');
 app.register(serverAdapter.registerPlugin(), { prefix: '/admin/queues' });
@@ -37,8 +37,14 @@ await app.register(sse);
 await loadRoutes(app, "routes");
 
 app.listen({ port: config.server.port, host: config.server.host }, (err) => {
-  if (err) {
-    app.log.error(err);
-    process.exit(1);
-  }
+    if (err) {
+        app.log.error(err);
+        process.exit(1);
+    }
+});
+
+app.addHook('onClose', async (instance) => {
+    await instance.redis.quit();
+    await instance.sub.quit();
+    await instance.pub.quit();
 });
