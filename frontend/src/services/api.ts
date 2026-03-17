@@ -1,13 +1,13 @@
 const API_BASE = '/api';
 
-export async function fetchStatus() {
-  const res = await fetch(`${API_BASE}/status`);
+export async function fetchStatus(apiBase = API_BASE) {
+  const res = await fetch(`${apiBase}/status`);
   if (!res.ok) throw new Error('Failed to fetch status');
   return res.json();
 }
 
-export async function addTarget(url: string) {
-  const res = await fetch(`${API_BASE}/targets`, {
+export async function addTarget(url: string, apiBase = API_BASE) {
+  const res = await fetch(`${apiBase}/targets`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ url }),
@@ -19,8 +19,8 @@ export async function addTarget(url: string) {
   return res.json();
 }
 
-export async function setCheckInterval(interval: number) {
-  const res = await fetch(`${API_BASE}/config/interval`, {
+export async function setCheckInterval(interval: number, apiBase = API_BASE) {
+  const res = await fetch(`${apiBase}/config/interval`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ interval }),

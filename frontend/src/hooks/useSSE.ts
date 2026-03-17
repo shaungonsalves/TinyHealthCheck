@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStatus } from '../context/StatusContext';
+import { useConfig } from '../context/ConfigContext';
 import { logger } from '../logger';
 
-const API_BASE = '/api';
-const MAX_RECONNECT_ATTEMPTS = 5; // for demo; adjust as needed
-const BASE_RECONNECT_DELAY = 1000;
-
 export const useSSE = () => {
+  const { config } = useConfig();
   const { setStatuses, showError } = useStatus();
   const [isConnected, setIsConnected] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
@@ -15,11 +13,13 @@ export const useSSE = () => {
   const eventSourceRef = useRef<EventSource | null>(null);
 
   const connect = () => {
+    if (!config) return; // config not loaded yet
+
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
     }
 
-    const es = new EventSource(`${API_BASE}/events`);
+    const es = new EventSource(`${config.apiBase}/events`);
     eventSourceRef.current = es;
 
     es.onopen = () => {
@@ -27,7 +27,7 @@ export const useSSE = () => {
       setIsConnected(true);
       setRetryCount(0);
       reconnectAttempts.current = 0;
-      showError(null); // clear any previous connection error
+      showError(null);
     };
 
     es.onmessage = (event) => {
@@ -52,10 +52,10 @@ export const useSSE = () => {
       es.close();
       eventSourceRef.current = null;
 
-      if (reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
-        const delay = BASE_RECONNECT_DELAY * Math.pow(2, reconnectAttempts.current);
+      if (reconnectAttempts.current < config.maxReconnectAttempts) {
+        const delay = config.baseReconnectDelay * Math.pow(2, reconnectAttempts.current);
         showError(
-          `Connection lost. Reconnecting in ${delay / 1000}s... (attempt ${reconnectAttempts.current + 1}/${MAX_RECONNECT_ATTEMPTS})`
+          `Connection lost. Reconnecting in ${delay / 1000}s... (attempt ${reconnectAttempts.current + 1}/${config.maxReconnectAttempts})`
         );
         setRetryCount(reconnectAttempts.current + 1);
 
@@ -66,7 +66,7 @@ export const useSSE = () => {
         }, delay) as unknown as number;
       } else {
         showError('Unable to reconnect. Please refresh manually.');
-        setRetryCount(MAX_RECONNECT_ATTEMPTS);
+        setRetryCount(config.maxReconnectAttempts);
       }
     };
   };
@@ -78,12 +78,14 @@ export const useSSE = () => {
   };
 
   useEffect(() => {
-    connect();
+    if (config) {
+      connect();
+    }
     return () => {
       if (eventSourceRef.current) eventSourceRef.current.close();
       if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
     };
-  }, []);
+  }, [config]);
 
   return { isConnected, retryCount, reconnect };
 };

@@ -1,37 +1,37 @@
-import { Alert, Collapse, Button, Box } from '@mui/material';
-import { useStatus } from '../context/StatusContext';
+import { Alert, Box } from '@mui/material';
 import { useSSE } from '../hooks/useSSE';
+import { useConfig } from '../context/ConfigContext';
 
 export const ConnectionAlert = () => {
-  const { error, setError } = useStatus();
-  const { retryCount, reconnect } = useSSE();
-  const maxRetries = 5; // should match MAX_RECONNECT_ATTEMPTS
+  const { config } = useConfig();
+  const { isConnected, retryCount } = useSSE();
 
-  const handleDismiss = () => {
-    setError(null);
+  if (!config) return null;
+
+  const isDisconnected = !isConnected;
+  const maxRetries = config.maxReconnectAttempts;
+
+  const getMessage = () => {
+    if (!isDisconnected) return '';
+    if (retryCount >= maxRetries) {
+      return 'Unable to reconnect. Please refresh the page.';
+    }
+    if (retryCount > 0) {
+      return `Connection lost. Reconnecting... (attempt ${retryCount}/${maxRetries})`;
+    }
+    return 'Connection lost. Reconnecting...';
   };
 
-  // Determine severity and color intensity
-  const isExhausted = retryCount >= maxRetries;
-  const severity = isExhausted ? 'error' : 'warning';
-  const sx = isExhausted ? { backgroundColor: '#d32f2f', color: 'white' } : {};
+  const message = getMessage();
+  const severity = retryCount >= maxRetries ? 'error' : 'warning';
+
+  if (!isDisconnected) return null;
 
   return (
-    <Collapse in={!!error && !isExhausted}>
-      <Box sx={{ mb: 2 }}>
-        <Alert
-          severity={severity}
-          onClose={handleDismiss}
-          action={
-            <Button color="inherit" size="small" onClick={reconnect}>
-              Retry now
-            </Button>
-          }
-          sx={sx}
-        >
-          {error}
-        </Alert>
-      </Box>
-    </Collapse>
+    <Box sx={{ mb: 2 }}>
+      <Alert severity={severity} sx={severity === 'error' ? { backgroundColor: '#d32f2f', color: 'white' } : {}}>
+        {message}
+      </Alert>
+    </Box>
   );
 };
