@@ -1,18 +1,4 @@
-version: '3.8'
-
 services:
-  redis-commander:
-    image: rediscommander/redis-commander:latest
-    restart: unless-stopped
-    environment:
-      - REDIS_HOSTS=local:redis:6379
-    ports:
-      - "8081:8081"
-    depends_on:
-      - redis
-    networks:
-      - tiny-network
-      
   redis:
     image: redis:7-alpine
     restart: unless-stopped
@@ -24,9 +10,10 @@ services:
   backend:
     build: ./backend
     restart: unless-stopped
+    volumes:
+      - ./config/backend.json:/app/config/backend.json:ro
     environment:
-      - REDIS_HOST=redis
-      - PORT=8080
+      - CONFIG_PATH=/app/config/backend.json
     ports:
       - "8080:8080"
     depends_on:
@@ -37,8 +24,10 @@ services:
   worker:
     build: ./worker
     restart: unless-stopped
+    volumes:
+      - ./config/worker.json:/app/config/worker.json:ro
     environment:
-      - REDIS_HOST=redis
+      - CONFIG_PATH=/app/config/worker.json
     depends_on:
       - redis
     networks:
@@ -51,6 +40,18 @@ services:
       - "80:80"
     depends_on:
       - backend
+    networks:
+      - tiny-network
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    restart: unless-stopped
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
     networks:
       - tiny-network
 
