@@ -1,0 +1,9 @@
+{
+  "redis": {
+    "host": "redis",
+    "port": 6379
+  },
+  "checkInterval": 30000,
+  "maxReconnectAttempts": 5,
+  "logLevel": "info"
+}

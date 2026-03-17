@@ -1,0 +1,11 @@
+{
+    "apiBase": "/api",
+    "defaultInterval": 30000,
+    "maxReconnectAttempts": 5,
+    "baseReconnectDelay": 1000,
+    "availableIntervals": [
+        10000,
+        30000,
+        60000
+    ]
+}
