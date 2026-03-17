@@ -1,15 +1,18 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import sse from "fastify-sse-v2";
-
+import { loadRoutes } from "./lib/pluginLoader.ts";
 const app = Fastify({ logger: true });
 
 await app.register(cors);
 await app.register(sse);
 
-// Register routes
-app.register(import("./routes/targets.js"), { prefix: "/targets" });
-app.register(import("./routes/status.js"), { prefix: "/status" });
-app.register(import("./routes/events.js"), { prefix: "/events" });
+await loadRoutes(app, "routes");
 
-app.listen({ port: 8080, host: "0.0.0.0" });
+const port = process.env.PORT ? parseInt(process.env.PORT) : 8080;
+app.listen({ port, host: "0.0.0.0" }, (err) => {
+  if (err) {
+    app.log.error(err);
+    process.exit(1);
+  }
+});
