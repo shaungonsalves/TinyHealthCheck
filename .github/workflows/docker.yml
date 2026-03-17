@@ -1,0 +1,45 @@
+name: Build and Publish Docker Images
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build backend image
+        run: |
+          docker build \
+            -t ghcr.io/${{ github.repository_owner }}/tinyhealth-backend:${{ github.sha }} \
+            backend
+
+      - name: Build worker image
+        run: |
+          docker build \
+            -t ghcr.io/${{ github.repository_owner }}/tinyhealth-worker:${{ github.sha }} \
+            worker
+
+      - name: Push backend image
+        run: |
+          docker push ghcr.io/${{ github.repository_owner }}/tinyhealth-backend:${{ github.sha }}
+
+      - name: Push worker image
+        run: |
+          docker push ghcr.io/${{ github.repository_owner }}/tinyhealth-worker:${{ github.sha }}
