@@ -9,21 +9,29 @@ export default async function routes(app: FastifyInstance) {
     reply.raw.flushHeaders?.();
 
     reply.sse({ data: "connected" });
+    app.log.info("SSE client connected");
 
-    const subscriber = new Redis({ host: process.env.REDIS_HOST || "localhost" });
-
+    // Create a dedicated subscriber for this connection using config
+    const subscriber = new Redis(app.config.redis);
     await subscriber.subscribe("health:update");
 
-    const handler = (_channel: string, message: string) => {
+    const handler = (channel: string, message: string) => {
+      app.log.debug(`SSE sending: ${message}`);
       reply.sse({ data: message });
     };
-
     subscriber.on("message", handler);
 
-    req.raw.on("close", async () => {
+    // Heartbeat
+    const heartbeat = setInterval(() => {
+      reply.raw.write(": heartbeat\n\n");
+    }, 15000);
+
+    req.raw.on("close", () => {
+      app.log.info("SSE client disconnected");
       subscriber.off("message", handler);
-      await subscriber.unsubscribe("health:update");
+      subscriber.unsubscribe("health:update");
       subscriber.disconnect();
+      clearInterval(heartbeat);
     });
   });
 }

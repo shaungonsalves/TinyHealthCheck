@@ -1,4 +1,5 @@
-import Redis from "ioredis";
+import Redis from 'ioredis';
+import { loadConfig } from './config.js';
 
-const host = process.env.REDIS_HOST || "localhost";
-export const redis = new Redis({ host });
+const config = await loadConfig();
+export const redis = new Redis({ host: config.redis.host, port: config.redis.port });
