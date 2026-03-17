@@ -2,7 +2,7 @@ name: Build and Publish Docker Images
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -43,3 +43,12 @@ jobs:
       - name: Push worker image
         run: |
           docker push ghcr.io/${{ github.repository_owner }}/tinyhealth-worker:${{ github.sha }}
+      - name: Build frontend image
+        run: |
+          docker build \
+            -t ghcr.io/${{ github.repository_owner }}/tinyhealth-frontend:${{ github.sha }} \
+            frontend
+
+      - name: Push frontend image
+        run: |
+          docker push ghcr.io/${{ github.repository_owner }}/tinyhealth-frontend:${{ github.sha }}
