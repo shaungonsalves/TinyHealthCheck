@@ -2,8 +2,12 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import sse from "fastify-sse-v2";
 import Redis from "ioredis";
-import { loadConfig } from "./lib/config.js";
-import { loadRoutes } from "./lib/pluginLoader.js";
+import { loadConfig } from "./lib/config.ts";
+import { loadRoutes } from "./lib/pluginLoader.ts";
+import { createBullBoard } from '@bull-board/api';
+import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
+import { FastifyAdapter } from '@bull-board/fastify';
+import { Queue as BullMQ } from 'bullmq';
 
 const config = await loadConfig();
 
@@ -16,6 +20,16 @@ app.decorate('config', config);
 app.decorate('redis', redis);
 app.decorate('sub', sub);
 app.decorate('pub', pub);
+
+// Bull-board setup
+const serverAdapter = new FastifyAdapter();
+const healthCheckQueue = new BullMQ('health-checks', { connection: config.redis });
+createBullBoard({
+  queues: [new BullMQAdapter(healthCheckQueue)],
+  serverAdapter,
+});
+serverAdapter.setBasePath('/admin/queues');
+app.register(serverAdapter.registerPlugin(), { prefix: '/admin/queues' });
 
 await app.register(cors);
 await app.register(sse);

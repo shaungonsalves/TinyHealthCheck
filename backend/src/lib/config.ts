@@ -9,8 +9,8 @@ export interface Config {
 let cachedConfig: Config | null = null;
 
 export async function loadConfig(): Promise<Config> {
-  if (cachedConfig) {
-    return cachedConfig; // TypeScript now knows cachedConfig is Config
+  if (cachedConfig !== null) {
+    return cachedConfig;
   }
   const configPath = process.env.CONFIG_PATH || '/app/config/backend.json';
   const data = await fs.readFile(configPath, 'utf-8');

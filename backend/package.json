@@ -5,6 +5,8 @@
   "license": "MIT",
   "type": "module",
   "dependencies": {
+    "@bull-board/api": "^6.20.5",
+    "@bull-board/fastify": "^6.20.5",
     "@fastify/cors": "^11.2.0",
     "bullmq": "^5.71.0",
     "fastify": "^5.8.2",
@@ -12,15 +14,20 @@
     "ioredis": "^5.10.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^25.5.0",
     "eslint": "^10.0.3",
+    "globals": "^17.4.0",
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.57.1"
   },
   "scripts": {
     "dev": "nodemon --watch src --exec ts-node src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   }
 }
