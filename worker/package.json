@@ -1,0 +1,25 @@
+{
+    "name": "tiny-health-check-worker",
+    "version": "1.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "nodemon --watch src --exec ts-node src/index.ts",
+        "lint": "eslint .",
+        "lint:fix": "eslint . --fix"
+    },
+    "dependencies": {
+        "bull": "^4",
+        "ioredis": "^5",
+        "pino": "^9"
+    },
+    "devDependencies": {
+        "@eslint/js": "^10.0.1",
+        "@types/node": "^20",
+        "eslint": "^10.0.3",
+        "globals": "^17.4.0",
+        "nodemon": "^3",
+        "ts-node": "^10",
+        "typescript": "^5",
+        "typescript-eslint": "^8.57.1"
+    }
+}
